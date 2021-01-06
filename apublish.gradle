@@ -1,0 +1,92 @@
+
+
+
+apply plugin: 'signing'
+apply plugin: "com.jfrog.bintray"
+apply plugin: "maven-publish"
+apply plugin: 'maven'
+
+
+task androidJavadocs(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    // JDK 1.8 is more strict then 1.7. Have JDK 1.8 behave like 1.7 for javadoc generation
+    if (org.gradle.internal.jvm.Jvm.current().getJavaVersion() == JavaVersion.VERSION_1_8) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+}
+
+task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+    classifier = 'javadoc'
+    from androidJavadocs.destinationDir
+}
+
+task androidSourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.sourceFiles
+}
+
+artifacts {
+    archives androidSourcesJar
+    archives androidJavadocsJar
+}
+
+
+
+signing {
+    sign configurations.archives
+}
+
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact androidSourcesJar
+            artifact androidJavadocsJar
+            pom {
+                name = "gdx.effekseer"
+                description = 'Dedicated library for using Effekseer particle tools in libGDX'
+                url = 'https://github.com/SrJohnathan/ParticlesLIbgdx'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'johnathanaj'
+                        name = 'Antonio Johnathan'
+                        email = 'johnathan.stark42@gmail.com'
+                    }
+                }
+                scm {
+                    connection =  'scm:git:git://github.com/SrJohnathan/ParticlesLIbgdx.git'
+                    developerConnection =  'scm:git:git://github.com/SrJohnathan/ParticlesLIbgdx.git'
+                    url = 'https://github.com/SrJohnathan/ParticlesLIbgdx'
+                }
+            }
+        }
+    }
+}
+
+
+bintray {
+    user = project.hasProperty('bintrayUser') ? project.getProperty('bintrayUser') : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayApiKey') ? project.getProperty('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+    publications = ['mavenJava']
+    pkg {
+        repo = 'br.com.johnathan.gdxwater'
+        name = 'android'
+        userOrg = 'srjohnathan'
+        vcsUrl = 'https://github.com/SrJohnathan/ParticlesLIbgdx.git'
+        licenses = ['The Apache License, Version 2.0']
+        publish = true
+        publicDownloadNumbers = true
+        version {
+            name = version
+        }
+    }
+}
+
+

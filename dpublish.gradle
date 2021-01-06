@@ -1,0 +1,87 @@
+
+
+
+apply plugin: 'signing'
+apply plugin: "com.jfrog.bintray"
+apply plugin: "maven-publish"
+apply plugin: 'maven'
+
+
+tasks.register("sourcesJar", Jar) {
+    from sourceSets.main.allJava
+    classifier "sources"
+}
+
+tasks.register("javadocJar", Jar) {
+    from javadoc
+    classifier "javadoc"
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            pom {
+                name = "desktop"
+                description = 'Dedicated library for using Effekseer particle tools in libGDX'
+                url = 'https://github.com/SrJohnathan/ParticlesLIbgdx'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'johnathanaj'
+                        name = 'Antonio Johnathan'
+                        email = 'johnathan.stark42@gmail.com'
+                    }
+                }
+                scm {
+                    connection =  'scm:git:git://github.com/SrJohnathan/ParticlesLIbgdx.git'
+                    developerConnection =  'scm:git:git://github.com/SrJohnathan/ParticlesLIbgdx.git'
+                    url = 'https://github.com/SrJohnathan/ParticlesLIbgdx'
+                }
+            }
+        }
+    }
+}
+
+
+bintray {
+    user = project.hasProperty('bintrayUser') ? project.getProperty('bintrayUser') : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayApiKey') ? project.getProperty('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+    publications = ['mavenJava']
+    pkg {
+        repo = 'br.com.johnathan.gdxwater'
+        name = 'desktop'
+        userOrg = 'srjohnathan'
+        vcsUrl = 'https://github.com/SrJohnathan/ParticlesLIbgdx.git'
+        licenses = ['The Apache License, Version 2.0']
+        publish = true
+        publicDownloadNumbers = true
+        version {
+            name = version
+        }
+    }
+}
+
+
+artifacts {
+    //archives libraryJar
+    //archives nativesJar
+    archives sourcesJar
+    archives javadocJar
+}
